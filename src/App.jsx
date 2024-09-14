@@ -12,8 +12,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to={`/documents/${uuidv4()}`} replace />} />
-        <Route path="/documents/:id" element={<TextEditor />} />
+        <Route path="/" element={<Navigate to={`/${uuidv4()}`} replace />} />
+        <Route path="/:id" element={<TextEditor />} />
       </Routes>
     </Router>
   );
