@@ -24,7 +24,7 @@ export default function TextEditor() {
 
 
     useEffect(() => {
-        const s = io("http://localhost:5174")
+        const s = io("https://docx-api-server.onrender.com:5174")
         setSocket(s)
         
         return () => {
