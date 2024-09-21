@@ -21,6 +21,7 @@ export default function TextEditor() {
   const { id: documentId } = useParams();
   const [socket, setSocket] = useState();
   const [quill, setQuill] = useState();
+  const [summary, setSummary] = useState('');
 
   // Handle save button click
   const handleSave = () => {
@@ -29,6 +30,35 @@ export default function TextEditor() {
     
     // Send full document content to the server
     socket.emit('save-document', documentId, content);
+  };
+
+  // Handle summarize button hover
+  const handleSummarize = async () => {
+    if (!quill) return;
+
+    // Get all text content from the Quill editor
+    const text = quill.getText().trim(); // Trim to remove any extra spaces
+
+    if (text) {
+      try {
+        const response = await fetch('https://summarizeapi.onrender.com/result', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text })
+        });
+        const data = await response.json();
+        if (data.summary) {
+          setSummary(data.summary); // Update the state with the summary
+          console.log('Summary:', data.summary);
+        }
+      } catch (error) {
+        console.error('Error fetching summary:', error);
+      }
+    } else {
+      console.log('No text available for summarization.');
+    }
   };
 
   // Connect to the socket server
@@ -102,31 +132,45 @@ export default function TextEditor() {
     setQuill(q);
   }, []);
 
-  // Attach save button to toolbar
+  // Attach save and summarize buttons to toolbar
   useEffect(() => {
     if (quill == null || socket == null) return;
 
     const toolbarContainer = document.querySelector('.ql-toolbar');
     if (toolbarContainer && !document.querySelector('.ql-save')) {
-      const customButton = document.createElement('button');
-      customButton.innerHTML = 'Save';
-      customButton.classList.add('ql-save');
+      // Save Button
+      const saveButton = document.createElement('button');
+      saveButton.innerHTML = 'Save';
+      saveButton.classList.add('ql-save');
+      toolbarContainer.appendChild(saveButton);
+      saveButton.addEventListener('click', handleSave);
 
-      toolbarContainer.appendChild(customButton);
+      // Summarize Button (on hover)
+      const summarizeButton = document.createElement('button');
+      summarizeButton.innerHTML = 'Summarize';
+      summarizeButton.classList.add('ql-summarize');
+      toolbarContainer.appendChild(summarizeButton);
 
-      // Add event listener for the save button
-      customButton.addEventListener('click', handleSave);
+      // Add event listener for the summarize button on hover
+      summarizeButton.addEventListener('mouseover', handleSummarize);
 
-      // Cleanup listener when component unmounts
+      // Cleanup listeners when component unmounts
       return () => {
-        customButton.removeEventListener('click', handleSave);
+        saveButton.removeEventListener('click', handleSave);
+        summarizeButton.removeEventListener('mouseover', handleSummarize);
       };
     }
-  }, [quill, socket, handleSave]);
+  }, [quill, socket, handleSave, handleSummarize]);
 
   return (
     <div className="container">
       <div ref={wrapperRef}></div>
+      {summary && (
+        <div className="summary-container">
+          <h3>Summary:</h3>
+          <p>{summary}</p>
+        </div>
+      )}
     </div>
   );
 }
