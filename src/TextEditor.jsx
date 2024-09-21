@@ -35,29 +35,27 @@ export default function TextEditor() {
   // Handle summarize button hover
   const handleSummarize = async () => {
     if (!quill) return;
-
-    // Get all text content from the Quill editor
-    const text = quill.getText().trim(); // Trim to remove any extra spaces
-
-    if (text) {
-      try {
-        const response = await fetch('https://summarizeapi.onrender.com/result', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ text })
-        });
-        const data = await response.json();
-        if (data.summary) {
-          setSummary(data.summary); // Update the state with the summary
-          console.log('Summary:', data.summary);
+    const selectedText = quill.getSelection();
+    if (selectedText) {
+      const text = quill.getText(selectedText.index, selectedText.length);
+      if (text) {
+        try {
+          const response = await fetch('https://summarizeapi.onrender.com/result', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text })
+          });
+          const data = await response.json();
+          if (data.summary) {
+            setSummary(data.summary); // Update the state with the summary
+            console.log('Summary:', data.summary);
+          }
+        } catch (error) {
+          console.error('Error fetching summary:', error);
         }
-      } catch (error) {
-        console.error('Error fetching summary:', error);
       }
-    } else {
-      console.log('No text available for summarization.');
     }
   };
 
