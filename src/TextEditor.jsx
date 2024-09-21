@@ -63,7 +63,7 @@ export default function TextEditor() {
 
   // Connect to the socket server
   useEffect(() => {
-    const s = io('http://localhost:5174');
+    const s = io('https://docxserver-2p1c.onrender.com');
     setSocket(s);
 
     return () => {
